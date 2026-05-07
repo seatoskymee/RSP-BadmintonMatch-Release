@@ -6,9 +6,9 @@
 
 ## 📲 최신 버전 다운로드
 
-| 버전 | 날짜 | 다운로드 |
-|------|------|----------|
-| v1.0.13 | 2026-05-08 | [⬇️ APK 다운로드](https://github.com/seatoskymee/RSP-BadmintonMatch-Release/releases/download/v1.0.13/RSPBadmintonMatch_v1.0.13_debug.apk) |
+[⬇️ **최신 APK 다운로드**](https://github.com/seatoskymee/RSP-BadmintonMatch-Release/releases/latest/download/RSPBadmintonMatch_latest.apk)
+
+> 버전별 릴리스 목록: [Releases](https://github.com/seatoskymee/RSP-BadmintonMatch-Release/releases)
 
 > **설치 방법:** 안드로이드 설정 → 보안 → **알 수 없는 출처 앱 설치 허용** 후 APK 실행
 
