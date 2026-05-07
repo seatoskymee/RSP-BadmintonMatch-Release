@@ -43,6 +43,3 @@
 - Kotlin + ViewBinding
 - Room Database (SQLite)
 
----
-
-**Made by RSP** | seatoskyme@naver.com
