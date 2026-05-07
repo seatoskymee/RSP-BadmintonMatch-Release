@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>배드민턴 대진표 만들기</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: linear-gradient(180deg, #eff6ff 0%, #f9fafb 100%);
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 280px;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 14px;
+      font: inherit;
+      resize: vertical;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .hint, .summary, .empty {
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .summary {
+      margin-bottom: 18px;
+      font-weight: 600;
+    }
+
+    .bracket {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .round {
+      min-width: 220px;
+    }
+
+    .round h3 {
+      margin-bottom: 16px;
+      font-size: 1rem;
+      color: #1d4ed8;
+    }
+
+    .matches {
+      display: grid;
+      gap: 16px;
+    }
+
+    .match {
+      background: #f8fafc;
+      border: 1px solid #dbeafe;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+    }
+
+    .team + .team {
+      border-top: 1px solid #dbeafe;
+    }
+
+    .badge {
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 8px;
+    }
+
+    .bye {
+      color: #94a3b8;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="card">
+        <h1>배드민턴 대진표 만들기 앱</h1>
+        <p class="hint">참가자 또는 팀 이름을 한 줄에 하나씩 입력하면 토너먼트 대진표를 바로 생성합니다.</p>
+        <label for="players"><strong>참가자 목록</strong></label>
+        <textarea id="players" placeholder="예시&#10;A팀&#10;B팀&#10;C팀&#10;D팀"></textarea>
+        <div class="button-row">
+          <button type="button" class="primary" id="generate">대진표 만들기</button>
+          <button type="button" class="secondary" id="sample">샘플 입력</button>
+          <button type="button" class="secondary" id="shuffle">순서 섞기</button>
+        </div>
+        <p class="hint">2명 이상 입력하면 단식 토너먼트 형식으로 자동 배치되며 부족한 자리는 부전승 처리됩니다.</p>
+      </div>
+      <div class="card">
+        <h2>대진표</h2>
+        <div id="summary" class="summary">참가자를 입력하면 대진표가 표시됩니다.</div>
+        <div id="bracket" class="bracket">
+          <p class="empty">아직 생성된 대진표가 없습니다.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const playersInput = document.getElementById("players");
+    const bracketElement = document.getElementById("bracket");
+    const summaryElement = document.getElementById("summary");
+
+    const samplePlayers = [
+      "민턴A", "민턴B", "민턴C", "민턴D",
+      "민턴E", "민턴F", "민턴G", "민턴H"
+    ];
+
+    function parsePlayers() {
+      return playersInput.value
+        .split("\n")
+        .map((name) => name.trim())
+        .filter(Boolean);
+    }
+
+    function nextPowerOfTwo(participantCount) {
+      let size = 1;
+      while (size < participantCount) {
+        size *= 2;
+      }
+      return size;
+    }
+
+    function shufflePlayers(players) {
+      for (let currentIndex = players.length - 1; currentIndex > 0; currentIndex -= 1) {
+        const randomIndex = Math.floor(Math.random() * (currentIndex + 1));
+        [players[currentIndex], players[randomIndex]] = [players[randomIndex], players[currentIndex]];
+      }
+      return players;
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function createRounds(players) {
+      const bracketSize = nextPowerOfTwo(players.length);
+      const rounds = [];
+      const byeCount = bracketSize - players.length;
+      let playerIndex = 0;
+      let currentRound = [];
+
+      for (let index = 0; index < byeCount; index += 1) {
+        currentRound.push([players[playerIndex], "BYE"]);
+        playerIndex += 1;
+      }
+
+      while (playerIndex < players.length) {
+        currentRound.push([players[playerIndex], players[playerIndex + 1]]);
+        playerIndex += 2;
+      }
+      rounds.push(currentRound);
+
+      while (currentRound.length > 1) {
+        currentRound = Array.from({ length: Math.ceil(currentRound.length / 2) }, () => ["승자", "승자"]);
+        rounds.push(currentRound);
+      }
+
+      return { rounds, bracketSize };
+    }
+
+    function renderBracket() {
+      const players = parsePlayers();
+
+      if (players.length < 2) {
+        summaryElement.textContent = "참가자를 2명 이상 입력해 주세요.";
+        bracketElement.innerHTML = '<p class="empty">최소 2명의 참가자가 필요합니다.</p>';
+        return;
+      }
+
+      const { rounds, bracketSize } = createRounds(players);
+      summaryElement.textContent = `총 ${players.length}팀 참가 · ${bracketSize}강 토너먼트`;
+
+      bracketElement.innerHTML = rounds.map((matches, roundIndex) => `
+        <section class="round">
+          <h3>${roundIndex === rounds.length - 1 ? "결승" : `${Math.pow(2, rounds.length - roundIndex)}강`}</h3>
+          <div class="matches">
+            ${matches.map((match, matchIndex) => `
+              <article class="match">
+                <div class="team ${match[0] === "BYE" ? "bye" : ""}">
+                  <span>${escapeHtml(match[0])}</span>
+                  <span class="badge">${roundIndex === 0 ? `경기 ${matchIndex + 1}` : "예정"}</span>
+                </div>
+                <div class="team ${match[1] === "BYE" ? "bye" : ""}">
+                  <span>${escapeHtml(match[1])}</span>
+                  <span class="badge">${match[0] === "BYE" || match[1] === "BYE" ? "부전승" : "대결"}</span>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      `).join("");
+    }
+
+    document.getElementById("generate").addEventListener("click", renderBracket);
+
+    document.getElementById("sample").addEventListener("click", () => {
+      playersInput.value = samplePlayers.join("\n");
+      renderBracket();
+    });
+
+    document.getElementById("shuffle").addEventListener("click", () => {
+      const players = parsePlayers();
+      if (players.length < 2) {
+        summaryElement.textContent = "참가자를 2명 이상 입력해 주세요.";
+        return;
+      }
+
+      playersInput.value = shufflePlayers(players).join("\n");
+      renderBracket();
+    });
+
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("sample") === "1") {
+      playersInput.value = samplePlayers.join("\n");
+    }
+    if (searchParams.has("players")) {
+      playersInput.value = searchParams.get("players").split(",").join("\n");
+    }
+    if (searchParams.get("shuffle") === "1") {
+      playersInput.value = shufflePlayers(parsePlayers()).join("\n");
+    }
+    if (parsePlayers().length >= 2) {
+      renderBracket();
+    }
+  </script>
+</body>
+</html>
