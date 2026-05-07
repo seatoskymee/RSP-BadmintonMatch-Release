@@ -196,18 +196,18 @@
         .filter(Boolean);
     }
 
-    function nextPowerOfTwo(number) {
+    function nextPowerOfTwo(participantCount) {
       let size = 1;
-      while (size < number) {
+      while (size < participantCount) {
         size *= 2;
       }
       return size;
     }
 
     function shufflePlayers(players) {
-      for (let index = players.length - 1; index > 0; index -= 1) {
-        const randomIndex = Math.floor(Math.random() * (index + 1));
-        [players[index], players[randomIndex]] = [players[randomIndex], players[index]];
+      for (let currentIndex = players.length - 1; currentIndex > 0; currentIndex -= 1) {
+        const randomIndex = Math.floor(Math.random() * (currentIndex + 1));
+        [players[currentIndex], players[randomIndex]] = [players[randomIndex], players[currentIndex]];
       }
       return players;
     }
